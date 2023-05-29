@@ -1,0 +1,55 @@
+import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
+import pandas as pd
+
+# Load data from Excel sheet
+excel_file = 'sellers.xlsx'  # Replace with your file name
+df = pd.read_excel(excel_file)
+
+# Set up Chrome WebDriver (you can use other web browsers as well)
+driver = webdriver.Chrome()  # Make sure the ChromeDriver executable is in your PATH
+
+# Loop through the sellers and send messages
+for index, row in df.iterrows():
+    store_link = row['Store Link']
+
+    # Visit the store
+    driver.get(store_link)
+
+    # Wait for the page to load and find the message button
+    try:
+        message_button = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, '//button[contains(text(), "Message")]'))
+        )
+    except NoSuchElementException:
+        print(f"Message button not found for store: {store_link}")
+        continue
+
+    # Click the message button
+    message_button.click()
+
+    # Wait for the message dialog to load and find the message input field
+    try:
+        message_input = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, '//textarea[@aria-label="Message"]'))
+        )
+    except NoSuchElementException:
+        print(f"Message input field not found for store: {store_link}")
+        continue
+
+    # Replace this with your message template
+    message_template = "Hello! I'm interested in your products. Could you please provide more information?"
+
+    # Send the message
+    message_input.send_keys(message_template)
+    message_input.submit()
+
+    # Wait for a few seconds before sending the next message (customize as needed)
+    time.sleep(5)
+
+# Close the browser
+driver.quit()
